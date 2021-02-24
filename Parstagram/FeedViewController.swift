@@ -27,7 +27,7 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         feedTableView.delegate = self
         feedTableView.dataSource = self
         
-        feedTableView.rowHeight = 400
+        feedTableView.rowHeight = 455
         
         
     }
@@ -42,7 +42,7 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         query.findObjectsInBackground { (posts, error) in
             if posts != nil {
                 self.posts = posts!
-                self.posts.append(contentsOf: posts!)
+                //self.posts.append(contentsOf: posts!)
                 self.feedTableView.reloadData()
             } else {
                 print("Error: \(error?.localizedDescription)")
@@ -68,7 +68,7 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         cell.postImage.af_setImage(withURL: url)
         
-        //cell.outerView.layer.cornerRadius = 15
+        cell.postImage.layer.borderWidth = 1.0
         
         return cell
     }
