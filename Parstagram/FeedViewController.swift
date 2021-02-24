@@ -7,6 +7,7 @@
 
 import UIKit
 import Parse
+import AlamofireImage
 
 class FeedViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
@@ -43,14 +44,10 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
                 self.posts = posts!
                 self.posts.append(contentsOf: posts!)
                 self.feedTableView.reloadData()
-                print("Inside")
-                print(self.posts)
             } else {
                 print("Error: \(error?.localizedDescription)")
             }
         }
-        print("Outside")
-        print(self.posts)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -64,6 +61,12 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         let user = post["author"] as! PFUser
         cell.usernameLabel.text = user.username
         cell.captionLabel.text = post["caption"] as! String
+        
+        let imageFile = post["image"] as! PFFileObject
+        let urlString = imageFile.url!
+        let url = URL(string: urlString)!
+        
+        cell.postImage.af_setImage(withURL: url)
         
         //cell.outerView.layer.cornerRadius = 15
         
