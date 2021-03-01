@@ -21,6 +21,8 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
     let refreshControl = UIRefreshControl()
     
     var posts = [PFObject]()
+    var reversePosts = [PFObject]()
+    var numPosts = 10
     
     
     override func viewDidLoad() {
@@ -40,12 +42,14 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         //the color of the spinner
         self.refreshControl.tintColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0);
         
+        feedTableView.indicatorStyle = UIScrollView.IndicatorStyle.white;
+        
     }
     
     @objc func loadPosts(){
         let query = PFQuery(className: "Posts")
         query.includeKey("author")
-        query.limit = 10
+        query.limit = numPosts
         
         query.findObjectsInBackground { (posts, error) in
             if posts != nil {
@@ -69,11 +73,12 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
     func loadMorePosts(){
         let query = PFQuery(className: "Posts")
         query.includeKey("author")
-        query.limit = 5
+        numPosts = numPosts + 5
+        query.limit = numPosts
         
         query.findObjectsInBackground { (posts, error) in
             if posts != nil {
-                self.posts.append(contentsOf: posts!)
+                self.posts = posts!
                 self.feedTableView.reloadData()
             } else {
                 print("Error: \(error?.localizedDescription)")
@@ -100,7 +105,9 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = feedTableView.dequeueReusableCell(withIdentifier: "PostCell") as! PostCell
         
-        let post = posts[indexPath.row]
+        reversePosts = posts.reversed()
+        
+        let post = reversePosts[indexPath.row]
         let user = post["author"] as! PFUser
         cell.usernameLabel.text = user.username
         cell.captionLabel.text = post["caption"] as! String
@@ -114,6 +121,17 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         cell.postImage.layer.borderWidth = 1.0
         
         return cell
+    }
+    
+    @IBAction func onLogoutButton(_ sender: Any) {
+        PFUser.logOut()
+        
+        let main = UIStoryboard(name: "Main", bundle: nil)
+        let loginVC = main.instantiateViewController(withIdentifier: "LoginViewController")
+        
+        let delegate = self.view.window?.windowScene?.delegate as! SceneDelegate
+        
+        delegate.window?.rootViewController = loginVC
     }
     
     
