@@ -17,6 +17,8 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
     @IBOutlet weak var usernameLabel: UILabel!
     @IBOutlet weak var captionLabel: UILabel!
     @IBOutlet weak var feedTableView: UITableView!
+
+    let refreshControl = UIRefreshControl()
     
     var posts = [PFObject]()
     
@@ -29,12 +31,18 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         feedTableView.rowHeight = 455
         
+        refreshControl.addTarget(self, action: #selector(loadPosts), for: .valueChanged)
+        feedTableView.refreshControl = refreshControl
+        
+        //the color of the background
+        self.refreshControl.backgroundColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1);
+
+        //the color of the spinner
+        self.refreshControl.tintColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0);
         
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
+    @objc func loadPosts(){
         let query = PFQuery(className: "Posts")
         query.includeKey("author")
         query.limit = 20
@@ -48,6 +56,20 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
                 print("Error: \(error?.localizedDescription)")
             }
         }
+        run(after: 2){
+            self.refreshControl.endRefreshing()
+        }
+    }
+    
+    func run(after wait: TimeInterval, closure: @escaping () -> Void){
+        let queue = DispatchQueue.main
+        queue.asyncAfter(deadline: DispatchTime.now() + wait, execute: closure)
+    }
+    
+    @objc override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        self.loadPosts()
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -72,6 +94,7 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         return cell
     }
+    
     
     /*
     // MARK: - Navigation
