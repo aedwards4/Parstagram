@@ -45,7 +45,7 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
     @objc func loadPosts(){
         let query = PFQuery(className: "Posts")
         query.includeKey("author")
-        query.limit = 20
+        query.limit = 10
         
         query.findObjectsInBackground { (posts, error) in
             if posts != nil {
@@ -64,6 +64,27 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
     func run(after wait: TimeInterval, closure: @escaping () -> Void){
         let queue = DispatchQueue.main
         queue.asyncAfter(deadline: DispatchTime.now() + wait, execute: closure)
+    }
+    
+    func loadMorePosts(){
+        let query = PFQuery(className: "Posts")
+        query.includeKey("author")
+        query.limit = 5
+        
+        query.findObjectsInBackground { (posts, error) in
+            if posts != nil {
+                self.posts.append(contentsOf: posts!)
+                self.feedTableView.reloadData()
+            } else {
+                print("Error: \(error?.localizedDescription)")
+            }
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath){
+        if indexPath.row + 1 == posts.count {
+            loadMorePosts()
+        }
     }
     
     @objc override func viewDidAppear(_ animated: Bool) {
