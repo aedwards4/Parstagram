@@ -26,7 +26,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
         post["author"] = PFUser.current()
         
         let image = uploadImageView.image!.pngData()
-        let file = PFFileObject(data: image!)
+        let file = PFFileObject(name: "image.png", data: image!)
         post["image"] = file
         
         post.saveInBackground { (success, error) in

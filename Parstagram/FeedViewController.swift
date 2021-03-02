@@ -31,7 +31,7 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         feedTableView.delegate = self
         feedTableView.dataSource = self
         
-        feedTableView.rowHeight = 455
+        //feedTableView.rowHeight = 455
         
         refreshControl.addTarget(self, action: #selector(loadPosts), for: .valueChanged)
         feedTableView.refreshControl = refreshControl
@@ -151,6 +151,14 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         delegate.window?.rootViewController = loginVC
     }
+    
+//    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+//        if (indexPath.row % 2 == 0){
+//            return 455
+//        } else{
+//            return 50
+//        }
+//    }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = posts[indexPath.row]
