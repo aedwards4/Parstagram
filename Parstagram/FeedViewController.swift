@@ -99,28 +99,46 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
+        let post = posts[section]
+        let comments = (post["comments"] as? [PFObject]) ?? []
+        
+        return comments.count + 1
+    }
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
         return self.posts.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = feedTableView.dequeueReusableCell(withIdentifier: "PostCell") as! PostCell
         
         reversePosts = posts.reversed()
+        let post = reversePosts[indexPath.section]
+        let comments = (post["comments"] as? [PFObject]) ?? []
         
-        let post = reversePosts[indexPath.row]
-        let user = post["author"] as! PFUser
-        cell.usernameLabel.text = user.username
-        cell.captionLabel.text = post["caption"] as! String
+        if indexPath.row == 0 {
+            let cell = feedTableView.dequeueReusableCell(withIdentifier: "PostCell") as! PostCell
+            
+            let user = post["author"] as! PFUser
+            cell.usernameLabel.text = user.username
+            cell.captionUserLabel.text = user.username
+            cell.captionLabel.text = post["caption"] as! String
+            
+            let imageFile = post["image"] as! PFFileObject
+            let urlString = imageFile.url!
+            let url = URL(string: urlString)!
+            
+            cell.postImage.af_setImage(withURL: url)
+            
+            cell.postImage.layer.borderWidth = 1.0
+            
+            return cell
+        } else {
+            let commentCell = feedTableView.dequeueReusableCell(withIdentifier: "CommentCell") as! CommentCell
+            
+            return commentCell
+        }
         
-        let imageFile = post["image"] as! PFFileObject
-        let urlString = imageFile.url!
-        let url = URL(string: urlString)!
-        
-        cell.postImage.af_setImage(withURL: url)
-        
-        cell.postImage.layer.borderWidth = 1.0
-        
-        return cell
     }
     
     @IBAction func onLogoutButton(_ sender: Any) {
@@ -134,6 +152,24 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         delegate.window?.rootViewController = loginVC
     }
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let post = posts[indexPath.row]
+        
+        let comment = PFObject(className: "Comments")
+        comment["text"] = "This is a random comment"
+        comment["post"] = post
+        comment["author"] = PFUser.current()!
+        
+        post.add(comment, forKey: "comments")
+        
+        post.saveInBackground { (success, error) in
+            if success{
+                print("Comment saved!")
+            } else {
+                print("Error saving comment")
+            }
+        }
+    }
     
     /*
     // MARK: - Navigation
