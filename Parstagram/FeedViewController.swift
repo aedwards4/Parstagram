@@ -48,7 +48,8 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     @objc func loadPosts(){
         let query = PFQuery(className: "Posts")
-        query.includeKey("author")
+        query.includeKeys(["author", "comments", "comments.author"])
+        query.order(byDescending: "createdAt")
         query.limit = numPosts
         
         query.findObjectsInBackground { (posts, error) in
@@ -63,6 +64,7 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         run(after: 2){
             self.refreshControl.endRefreshing()
         }
+        
     }
     
     func run(after wait: TimeInterval, closure: @escaping () -> Void){
@@ -70,25 +72,11 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         queue.asyncAfter(deadline: DispatchTime.now() + wait, execute: closure)
     }
     
-    func loadMorePosts(){
-        let query = PFQuery(className: "Posts")
-        query.includeKey("author")
-        numPosts = numPosts + 5
-        query.limit = numPosts
-        
-        query.findObjectsInBackground { (posts, error) in
-            if posts != nil {
-                self.posts = posts!
-                self.feedTableView.reloadData()
-            } else {
-                print("Error: \(error?.localizedDescription)")
-            }
-        }
-    }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath){
-        if indexPath.row + 1 == posts.count {
-            loadMorePosts()
+        if indexPath.section + 1 == posts.count {
+            numPosts = numPosts + 5
+            loadPosts()
         }
     }
     
@@ -103,7 +91,7 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         let post = posts[section]
         let comments = (post["comments"] as? [PFObject]) ?? []
         
-        return comments.count + 1
+        return comments.count + 2
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -112,14 +100,17 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        reversePosts = posts.reversed()
-        let post = reversePosts[indexPath.section]
+        //reversePosts = posts.reversed()
+        let post = posts[indexPath.section]
         let comments = (post["comments"] as? [PFObject]) ?? []
+        
+        print(posts.count)
         
         if indexPath.row == 0 {
             let cell = feedTableView.dequeueReusableCell(withIdentifier: "PostCell") as! PostCell
             
             let user = post["author"] as! PFUser
+            
             cell.usernameLabel.text = user.username
             cell.captionUserLabel.text = user.username
             cell.captionLabel.text = post["caption"] as! String
@@ -133,10 +124,21 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
             cell.postImage.layer.borderWidth = 1.0
             
             return cell
-        } else {
+        } else if indexPath.row <= comments.count{
             let commentCell = feedTableView.dequeueReusableCell(withIdentifier: "CommentCell") as! CommentCell
-            
+
+            let comment = comments[indexPath.row - 1]
+
+            if comment["text"] != nil{
+                commentCell.commentLabel.text = comment["text"] as? String
+
+                let user = comment["author"] as! PFUser
+                commentCell.usernameLabel.text = user.username
+            }
+
             return commentCell
+        } else{
+            return feedTableView.dequeueReusableCell(withIdentifier: "AddCommentCell") as! AddCommentCell
         }
         
     }
@@ -151,14 +153,7 @@ class FeedViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         delegate.window?.rootViewController = loginVC
     }
-    
-//    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-//        if (indexPath.row % 2 == 0){
-//            return 455
-//        } else{
-//            return 50
-//        }
-//    }
+
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = posts[indexPath.row]
