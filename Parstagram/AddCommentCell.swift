@@ -9,6 +9,8 @@ import UIKit
 
 class AddCommentCell: UITableViewCell {
 
+    @IBOutlet weak var addLabel: UILabel!
+    @IBOutlet weak var userNameLabel: UITextField!
     @IBOutlet weak var addCommentTextField: UITextField!
     
     override func awakeFromNib() {
